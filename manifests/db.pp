@@ -24,9 +24,9 @@ service { "mysql":
   require    => Package["mysql-server"],
 }
 
-exec { "loja-schema":
-  unless  => "mysql -u root -e 'USE loja_schema;'",
-  command => "mysqladmin -u root create loja_schema",
+exec { "petclinic":
+  unless  => "mysql -u root -e 'USE petclinic;'",
+  command => "mysqladmin -u root create petclinic",
   path    => ["/usr/bin", "/bin"],
   require => Service["mysql"],
 }
@@ -38,9 +38,9 @@ exec { "remove-anonymous-user":
   require => Service["mysql"],
 }
 
-exec { "loja-user":
-  unless  => "mysql -u root -e \"SELECT User, Db FROM mysql.db WHERE User='loja' AND Db='loja_schema';\" | grep loja",
-  command => "mysql -u root -e \"CREATE USER 'loja'@'%' IDENTIFIED BY 'lojasecret'; GRANT ALL PRIVILEGES ON loja_schema.* TO 'loja'@'%';\"",
+exec { "clinic-user":
+  unless  => "mysql -u root -e \"SELECT User, Db FROM mysql.db WHERE User='cluser' AND Db='petclinic';\" | grep cluser",
+  command => "mysql -u root -e \"CREATE USER 'cluser'@'%' IDENTIFIED BY 'petsecret'; GRANT ALL PRIVILEGES ON petclinic.* TO 'cluser'@'%';\"",
   path    => ["/usr/bin", "/bin"],
-  require => Exec['loja-schema'],
+  require => Exec['petclinic'],
 }
