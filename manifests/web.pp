@@ -2,7 +2,7 @@ exec { "apt-update":
   command => "/usr/bin/apt-get update",
 }
 
-$deploymentapps = ['mysql-server','maven','git']
+$deploymentapps = ['mysql-server','maven','git','openjdk-17-jdk']
 
 package { $deploymentapps:
   ensure  => installed,
@@ -18,22 +18,31 @@ service { 'mysql':
 }
 
 exec { "clone-petclinic":
-  #unless  => "cd spring-framework-petclinic'",
   command => "sudo git clone https://github.com/spring-petclinic/spring-framework-petclinic",
   path    => ["/usr/bin", "/bin"],
+  creates => "/home/vagrant/spring-framework-petclinic",
   require => Package[$deploymentapps],
+
 }
 
 file { "/home/vagrant/spring-framework-petclinic/pom.xml":
-  #owner   => "mvn",
-  #mode    => "0644",
   content => template("/vagrant/manifests/pom.xml"),
   require => Exec["clone-petclinic"],
 }
 
 exec { "deploy":
-  command => "sudo ./mvnw jetty:run-war -P MySQL",
-  path    => ["/usr/bin", "/bin"],
-  cwd     => "/home/vagrant/spring-framework-petclinic"
+  command     => "sudo ./mvnw jetty:run-war -P MySQL",
+  path        => ["/usr/bin", "/bin", "/usr/sbin"],
+  cwd         => "/home/vagrant/spring-framework-petclinic",
+  require     => File['/home/vagrant/spring-framework-petclinic/pom.xml'],
+  timeout => 0
 }
 
+
+exec { "health-check" :
+  command => "curl 192.168.56.12:8080",
+  path => ["/usr/bin", "/bin"],
+  try_sleep => 120,
+  require => Exec["deploy"]
+
+}
