@@ -31,9 +31,10 @@ file { "/home/vagrant/spring-framework-petclinic/pom.xml":
 }
 
 exec { "deploy":
-  command     => "sudo ./mvnw jetty:run-war -P MySQL",
+  command     => "nohup sudo ./mvnw jetty:run-war -P MySQL >/dev/null 2>&1 &",
   path        => ["/usr/bin", "/bin", "/usr/sbin"],
   cwd         => "/home/vagrant/spring-framework-petclinic",
+  unless  => "curl 192.168.56.12:8080", 
   require     => File['/home/vagrant/spring-framework-petclinic/pom.xml'],
   timeout => 0
 }
@@ -43,6 +44,7 @@ exec { "health-check" :
   command => "curl 192.168.56.12:8080",
   path => ["/usr/bin", "/bin"],
   try_sleep => 120,
+# unless  => "curl -s http://localhost:8080 >/dev/null",
   require => Exec["deploy"]
-
+  
 }
