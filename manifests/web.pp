@@ -1,12 +1,12 @@
-exec { "apt-update":
-  command => "/usr/bin/apt-get update",
-}
+#exec { "apt-update":
+#  command => "/usr/bin/apt-get update",
+#}
 
 $deploymentapps = ['mysql-server','maven','git','openjdk-17-jdk']
 
 package { $deploymentapps:
   ensure  => installed,
-  require => Exec["apt-update"],
+ # require => Exec["apt-update"],
 }
 
 service { 'mysql':
@@ -39,12 +39,12 @@ exec { "deploy":
   timeout => 0
 }
 
-
 exec { "health-check" :
-  command => "curl 192.168.56.12:8080",
-  path => ["/usr/bin", "/bin"],
-  try_sleep => 120,
-# unless  => "curl -s http://localhost:8080 >/dev/null",
-  require => Exec["deploy"]
-  
+  command    => "curl -s -f http://192.168.56.12:8080",
+  path       => ["/usr/bin", "/bin"],
+  try_sleep  => 60,
+  tries      => 5,
+  unless     => "curl -s -f http://192.168.56.12:8080",
+  require    => Exec["deploy"]
 }
+
